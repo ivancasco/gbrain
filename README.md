@@ -96,7 +96,7 @@ You: "Install gbrain and set up my knowledge brain.
       4. Read the skill files in skills/ so you know how to use the brain"
 ```
 
-OpenClaw will install the package, walk through the Supabase connection wizard, import demo data, and learn the 6 brain skills (ingest, query, maintain, enrich, briefing, migrate).
+OpenClaw will install the package, walk through the Supabase connection wizard, import demo data, and learn the 7 brain skills (ingest, query, maintain, enrich, briefing, migrate, install).
 
 After setup, you talk to your brain through OpenClaw:
 
@@ -108,6 +108,8 @@ You: "Import my Obsidian vault into the brain"
 ```
 
 OpenClaw reads the skill files in `skills/`, figures out which gbrain commands to run, and does the work. You never touch the CLI directly unless you want to.
+
+GBrain keeps your brain current automatically. After setup, `gbrain sync --watch` polls your git repo and imports only what changed. Binary files (images, PDFs, audio) can be moved to Supabase Storage with `gbrain files sync` to slim down your git repo.
 
 ### With ClawHub
 

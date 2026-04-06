@@ -255,7 +255,7 @@ ADMIN
   health                             Brain health dashboard
   history <slug>                     Page version history
   revert <slug> <version-id>         Revert to version
-  config [get|set] <key> [value]     Brain config
+  config [show|get|set] <key> [value] Brain config
   serve                              MCP server (stdio)
   call <tool> '<json>'               Raw tool invocation
   version                            Version info

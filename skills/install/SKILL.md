@@ -183,6 +183,13 @@ Every error tells you what happened, why, and how to fix it:
 | Sync anchor missing | Force push removed the commit | `gbrain sync --full` |
 | No pages found | Query before import | `gbrain import <dir>` first |
 
+## Upgrading
+
+- Run `bun update gbrain` to get the latest version
+- Run `gbrain init` again to apply schema migrations (idempotent, safe to re-run)
+- The new `files` table gets created automatically on next init
+- Sync state is preserved across upgrades
+
 ## Health Check
 
 Run `gbrain health` at any time to verify all connections:
