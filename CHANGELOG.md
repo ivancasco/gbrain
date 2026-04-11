@@ -2,6 +2,23 @@
 
 All notable changes to GBrain will be documented in this file.
 
+## [0.7.0] - 2026-04-11
+
+### Added
+
+- **Your brain now runs locally with zero infrastructure.** PGLite (Postgres 17.5 compiled to WASM) gives you the exact same search quality as Supabase, same pgvector HNSW, same pg_trgm fuzzy matching, same tsvector full-text search. No server, no subscription, no API keys needed for keyword search. `gbrain init` and you're running in 2 seconds.
+- **Smart init defaults to local.** `gbrain init` now creates a PGLite brain by default. If your repo has 1000+ markdown files, it suggests Supabase for scale. `--supabase` and `--pglite` flags let you choose explicitly.
+- **Migrate between engines anytime.** `gbrain migrate --to supabase` transfers your entire brain (pages, chunks, embeddings, tags, links, timeline) to remote Postgres with manifest-based resume. `gbrain migrate --to pglite` goes the other way. Embeddings copy directly, no re-embedding needed.
+- **Pluggable engine factory.** `createEngine()` dynamically loads the right engine from config. PGLite WASM is never loaded for Postgres users.
+- **Search works without OpenAI.** `hybridSearch` now checks for `OPENAI_API_KEY` before attempting embeddings. No key = keyword-only search. No more crashes when you just want to search your local brain.
+
+### Changed
+
+- **Engine interface expanded.** Added `runMigration()` (replaces internal driver access for schema migrations) and `getChunksWithEmbeddings()` (loads embedding data for cross-engine migration).
+- **Shared utilities extracted.** `validateSlug`, `contentHash`, and row mappers moved from `postgres-engine.ts` to `src/core/utils.ts`. Both engines share them.
+- **Config infers engine type.** If `database_path` is set but `engine` is missing, config now infers `pglite` instead of defaulting to `postgres`.
+- **Import serializes on PGLite.** Parallel workers are Postgres-only. PGLite uses sequential import (single-connection architecture).
+
 ## [0.6.1] - 2026-04-10
 
 ### Fixed
