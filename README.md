@@ -9,9 +9,11 @@ Your AI agent is smart but it doesn't know anything about your life. GBrain fixe
 Copy this block into [OpenClaw](https://openclaw.ai) or [Hermes Agent](https://github.com/NousResearch/hermes-agent). The agent will install GBrain, set up your database, import your files, and verify everything works.
 
 ```
-GOAL: Install GBrain so I can search my own markdown files with
-hybrid search (keyword + vector). Do not skip steps. Verify each
-step before proceeding. If a step fails, stop and fix it.
+GOAL: I want Garry's exact opinionated Claude Code or Hermes Agent
+setup. Get me there. Install GBrain, set up the brain schema, import
+my files, configure all integrations, and verify everything works.
+Do not skip steps. Verify each step before proceeding. If a step
+fails, stop and fix it.
 
 **You don't need a server to start.** `gbrain init` now defaults to PGLite -- embedded Postgres 17.5 running via WASM, right on your machine. No Supabase account, no Docker, no connection strings. One command and you have a full Postgres brain with pgvector, hybrid search, and all 37 operations. When your brain outgrows local (1,000+ files), `gbrain migrate --to supabase` moves everything to managed Postgres in one shot.
 
