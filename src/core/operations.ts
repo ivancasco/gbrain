@@ -56,11 +56,19 @@ export interface Logger {
   error(msg: string): void;
 }
 
+export interface AuthInfo {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+}
+
 export interface OperationContext {
   engine: BrainEngine;
   config: GBrainConfig;
   logger: Logger;
   dryRun: boolean;
+  auth?: AuthInfo;
 }
 
 export interface Operation {
@@ -69,6 +77,8 @@ export interface Operation {
   params: Record<string, ParamDef>;
   handler: (ctx: OperationContext, params: Record<string, unknown>) => Promise<unknown>;
   mutating?: boolean;
+  scope?: 'read' | 'write' | 'admin';
+  localOnly?: boolean;
   cliHints?: {
     name?: string;
     positional?: string[];
@@ -110,6 +120,7 @@ const get_page: Operation = {
     const tags = await ctx.engine.getTags(page.slug);
     return { ...page, tags, ...(resolved_slug ? { resolved_slug } : {}) };
   },
+  scope: 'read',
   cliHints: { name: 'get', positional: ['slug'] },
 };
 
@@ -121,6 +132,7 @@ const put_page: Operation = {
     content: { type: 'string', required: true, description: 'Full markdown content with YAML frontmatter' },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'put_page', slug: p.slug };
     const result = await importFromContent(ctx.engine, p.slug as string, p.content as string);
@@ -136,6 +148,7 @@ const delete_page: Operation = {
     slug: { type: 'string', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'delete_page', slug: p.slug };
     await ctx.engine.deletePage(p.slug as string);
@@ -165,6 +178,7 @@ const list_pages: Operation = {
       updated_at: pg.updated_at,
     }));
   },
+  scope: 'read',
   cliHints: { name: 'list' },
 };
 
@@ -180,6 +194,7 @@ const search: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.searchKeyword(p.query as string, { limit: (p.limit as number) || 20 });
   },
+  scope: 'read',
   cliHints: { name: 'search', positional: ['query'] },
 };
 
@@ -199,6 +214,7 @@ const query: Operation = {
       expandFn: expand ? expandQuery : undefined,
     });
   },
+  scope: 'read',
   cliHints: { name: 'query', positional: ['query'] },
 };
 
@@ -212,6 +228,7 @@ const add_tag: Operation = {
     tag: { type: 'string', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'add_tag', slug: p.slug, tag: p.tag };
     await ctx.engine.addTag(p.slug as string, p.tag as string);
@@ -228,6 +245,7 @@ const remove_tag: Operation = {
     tag: { type: 'string', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'remove_tag', slug: p.slug, tag: p.tag };
     await ctx.engine.removeTag(p.slug as string, p.tag as string);
@@ -245,6 +263,7 @@ const get_tags: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getTags(p.slug as string);
   },
+  scope: 'read',
   cliHints: { name: 'tags', positional: ['slug'] },
 };
 
@@ -260,6 +279,7 @@ const add_link: Operation = {
     context: { type: 'string', description: 'Context for the link' },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'add_link', from: p.from, to: p.to };
     await ctx.engine.addLink(
@@ -279,6 +299,7 @@ const remove_link: Operation = {
     to: { type: 'string', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'remove_link', from: p.from, to: p.to };
     await ctx.engine.removeLink(p.from as string, p.to as string);
@@ -296,6 +317,7 @@ const get_links: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getLinks(p.slug as string);
   },
+  scope: 'read',
 };
 
 const get_backlinks: Operation = {
@@ -307,6 +329,7 @@ const get_backlinks: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getBacklinks(p.slug as string);
   },
+  scope: 'read',
   cliHints: { name: 'backlinks', positional: ['slug'] },
 };
 
@@ -320,6 +343,7 @@ const traverse_graph: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.traverseGraph(p.slug as string, (p.depth as number) || 5);
   },
+  scope: 'read',
   cliHints: { name: 'graph', positional: ['slug'] },
 };
 
@@ -336,6 +360,7 @@ const add_timeline_entry: Operation = {
     source: { type: 'string' },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'add_timeline_entry', slug: p.slug };
     await ctx.engine.addTimelineEntry(p.slug as string, {
@@ -358,6 +383,7 @@ const get_timeline: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getTimeline(p.slug as string);
   },
+  scope: 'read',
   cliHints: { name: 'timeline', positional: ['slug'] },
 };
 
@@ -370,6 +396,7 @@ const get_stats: Operation = {
   handler: async (ctx) => {
     return ctx.engine.getStats();
   },
+  scope: 'admin',
   cliHints: { name: 'stats' },
 };
 
@@ -380,6 +407,7 @@ const get_health: Operation = {
   handler: async (ctx) => {
     return ctx.engine.getHealth();
   },
+  scope: 'admin',
   cliHints: { name: 'health' },
 };
 
@@ -392,6 +420,7 @@ const get_versions: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getVersions(p.slug as string);
   },
+  scope: 'read',
   cliHints: { name: 'history', positional: ['slug'] },
 };
 
@@ -403,6 +432,7 @@ const revert_version: Operation = {
     version_id: { type: 'number', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'revert_version', slug: p.slug, version_id: p.version_id };
     await ctx.engine.createVersion(p.slug as string);
@@ -425,6 +455,8 @@ const sync_brain: Operation = {
     no_embed: { type: 'boolean', description: 'Skip embedding generation' },
   },
   mutating: true,
+  scope: 'admin',
+  localOnly: true,
   handler: async (ctx, p) => {
     const { performSync } = await import('../commands/sync.ts');
     return performSync(ctx.engine, {
@@ -449,6 +481,7 @@ const put_raw_data: Operation = {
     data: { type: 'object', required: true, description: 'Raw data object' },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'put_raw_data', slug: p.slug, source: p.source };
     await ctx.engine.putRawData(p.slug as string, p.source as string, p.data as object);
@@ -466,6 +499,7 @@ const get_raw_data: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getRawData(p.slug as string, p.source as string | undefined);
   },
+  scope: 'read',
 };
 
 // --- Resolution & Chunks ---
@@ -479,6 +513,7 @@ const resolve_slugs: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.resolveSlugs(p.partial as string);
   },
+  scope: 'read',
 };
 
 const get_chunks: Operation = {
@@ -490,6 +525,7 @@ const get_chunks: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getChunks(p.slug as string);
   },
+  scope: 'read',
 };
 
 // --- Ingest Log ---
@@ -504,6 +540,7 @@ const log_ingest: Operation = {
     summary: { type: 'string', required: true },
   },
   mutating: true,
+  scope: 'write',
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'log_ingest' };
     await ctx.engine.logIngest({
@@ -525,6 +562,7 @@ const get_ingest_log: Operation = {
   handler: async (ctx, p) => {
     return ctx.engine.getIngestLog({ limit: (p.limit as number) || 20 });
   },
+  scope: 'read',
 };
 
 // --- File Operations ---
@@ -535,6 +573,8 @@ const file_list: Operation = {
   params: {
     slug: { type: 'string', description: 'Filter by page slug' },
   },
+  scope: 'admin',
+  localOnly: true,
   handler: async (_ctx, p) => {
     const sql = db.getConnection();
     const slug = p.slug as string | undefined;
@@ -553,6 +593,8 @@ const file_upload: Operation = {
     page_slug: { type: 'string', description: 'Associate with page' },
   },
   mutating: true,
+  scope: 'admin',
+  localOnly: true,
   handler: async (ctx, p) => {
     if (ctx.dryRun) return { dry_run: true, action: 'file_upload', path: p.path };
 
@@ -623,6 +665,8 @@ const file_url: Operation = {
   params: {
     storage_path: { type: 'string', required: true },
   },
+  scope: 'admin',
+  localOnly: true,
   handler: async (_ctx, p) => {
     const sql = db.getConnection();
     const rows = await sql`SELECT storage_path, mime_type, size_bytes FROM files WHERE storage_path = ${p.storage_path as string}`;
