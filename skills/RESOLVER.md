@@ -51,6 +51,8 @@ This is the dispatcher. Skills are the implementation. **Read the skill file bef
 | Save or load reports | `skills/reports/SKILL.md` |
 | "Create a skill", "improve this skill" | `skills/skill-creator/SKILL.md` |
 | Cross-modal review, second opinion | `skills/cross-modal-review/SKILL.md` |
+| "Validate skills", skill health check | `skills/testing/SKILL.md` |
+| Webhook setup, external event processing | `skills/webhook-transforms/SKILL.md` |
 
 ## Setup & migration
 
