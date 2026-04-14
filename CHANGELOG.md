@@ -24,6 +24,27 @@ All notable changes to GBrain will be documented in this file.
 
 - **Existing 8 skills migrated to conformance format.** Frontmatter added, Workflow renamed to Phases, Contract and Anti-Patterns sections added. Ingest becomes a thin router delegating to specialized ingestion skills.
 
+### The 16 new skills
+
+| Skill | What it does | Why it matters |
+|-------|-------------|----------------|
+| **signal-detector** | Fires on every message. Spawns a cheap model in parallel to capture original thinking and entity mentions. | Your brain compounds on autopilot. Every conversation is an ingest event. Miss a signal and the brain never learns it. |
+| **brain-ops** | Brain-first lookup before any external API. The read-enrich-write loop that makes every response smarter. | Without this, your agent reaches for Google when the answer is already in the brain. Wastes tokens, misses context. |
+| **idea-ingest** | Links, articles, tweets go into the brain with analysis, author people pages, and cross-linking. | Every article worth reading is worth remembering. The author gets a people page. The ideas get cross-linked to what you already know. |
+| **media-ingest** | Video, audio, PDF, books, screenshots, GitHub repos. Transcripts, entity extraction, backlink propagation. | One skill handles every media format. Absorbs what used to be 3 separate skills (video-ingest, youtube-ingest, book-ingest). |
+| **meeting-ingestion** | Transcripts become brain pages. Every attendee gets enriched. Every company discussed gets a timeline entry. | A meeting is NOT fully ingested until every entity is propagated. This is the skill that turns a transcript into 10 updated brain pages. |
+| **citation-fixer** | Scans brain pages for missing or malformed `[Source: ...]` citations. Fixes formatting to match the standard. | Without citations, you can't trace facts back to where they came from. Six months later, "who said this?" has an answer. |
+| **repo-architecture** | Where new brain files go. Decision protocol: primary subject determines directory, not format or source. | Prevents the #1 misfiling pattern: dumping everything in `sources/` because it came from a URL. |
+| **skill-creator** | Create new skills following the conformance standard. MECE check against existing skills. Updates manifest and resolver. | Users who need a capability GBrain doesn't have can create it themselves. The skill teaches the agent how to extend itself. |
+| **daily-task-manager** | Add, complete, defer, remove, review tasks with priority levels (P0-P3). Stored as a searchable brain page. | Your tasks live in the brain, not a separate app. The agent can cross-reference tasks with meeting notes and people pages. |
+| **daily-task-prep** | Morning preparation. Calendar lookahead with brain context per attendee, open threads from yesterday, active task review. | Walk into every meeting with full context on every person in the room, automatically. |
+| **cross-modal-review** | Spawn a different AI model to review the agent's work before committing. Refusal routing: if one model refuses, silently switch. | Two models agreeing is stronger signal than one model being thorough. Refusal routing means the user never sees "I can't do that." |
+| **cron-scheduler** | Schedule staggering (5-min offsets), quiet hours (timezone-aware with wake-up override), thin job prompts. | 21 cron jobs at :00 is a thundering herd. Staggering prevents it. Quiet hours mean no 3 AM notifications. Wake-up override releases the backlog. |
+| **reports** | Timestamped reports with keyword routing. "What's the latest briefing?" maps to the right report directory. | Cheap replacement for vector search on frequent queries. Don't embed. Load the file. |
+| **testing** | Validates every skill has SKILL.md with frontmatter, manifest coverage, resolver coverage. The CI for your skill system. | 3 skills and you need validation. 24 skills and you need it yesterday. Catches dead references, missing sections, MECE violations. |
+| **soul-audit** | 6-phase interview that generates SOUL.md, USER.md, ACCESS_POLICY.md, HEARTBEAT.md. Your agent's identity, built from your answers. | What makes Wintermute feel like Wintermute. Without personality and access control, every agent feels the same. |
+| **webhook-transforms** | External events (SMS, meetings, social mentions) converted into brain pages with entity extraction. Dead-letter queue for failures. | Your brain ingests signals from everywhere. Not just conversations, but every webhook, every notification, every external event. |
+
 ### For contributors
 
 - `test/skills-conformance.test.ts` validates every skill has valid frontmatter and required sections
