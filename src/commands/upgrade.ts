@@ -11,6 +11,15 @@ export async function runUpgrade(args: string[]) {
 
   // Capture old version BEFORE upgrading (Codex finding: old binary runs this code)
   const oldVersion = VERSION;
+  // Fork mode: this binary was built from a downstream fork (ivancasco/gbrain).
+  // Auto-upgrade would overwrite local patches, so refuse and print sync steps.
+  console.error('You are running a fork build. Auto-upgrade is disabled to protect local patches.');
+  console.log('To sync with upstream:');
+  console.log('  cd ~/gbrain && git fetch upstream && git rebase upstream/master');
+  console.log('  bun run build && gbrain apply-migrations --yes');
+  console.log('Then push your fork: git push --force-with-lease origin master');
+  return;
+
   const method = detectInstallMethod();
 
   console.log(`Detected install method: ${method}`);
